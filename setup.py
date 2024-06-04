@@ -1,13 +1,14 @@
 from pathlib import Path
 
-from setuptools import setup
+from setuptools import setup, find_packages
+from cplus_core import __version__
 
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="cplus_core",
-    version="0.0.1",
+    version=__version__,
     description="Library supporting analysis of CPLUS framework.",
     long_description=long_description,
     url="https://github.com/kartoza/cplus-core",
@@ -22,10 +23,7 @@ setup(
         "Programming Language :: Python :: 3.10",
     ],
     keywords="cplus plugin qgis",
-    packages=["cplus_core"],
-    package_dir={"cplus_core": "cplus_core"},
-    package_data={"cplus_core": ["version.json", "data/*"]},
-    include_package_data=True,
+    packages=find_packages(exclude=["tests", "tests.*"]),
     install_requires=[],
     extras_require={
         "dev": [],
