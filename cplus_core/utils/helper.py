@@ -28,12 +28,12 @@ from qgis.analysis import QgsAlignRaster
 
 from qgis import processing
 
-from cplus.definitions.defaults import (
+from ..definitions.defaults import (
     DOCUMENTATION_SITE,
     REPORT_FONT_NAME,
     TEMPLATE_NAME,
 )
-from cplus.definitions.constants import (
+from ..definitions.constants import (
     NCS_CARBON_SEGMENT,
     NCS_PATHWAY_SEGMENT,
     PRIORITY_LAYERS_SEGMENT,
