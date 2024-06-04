@@ -24,6 +24,8 @@ setup(
     ],
     keywords="cplus plugin qgis",
     packages=find_packages(exclude=["tests", "tests.*"]),
+    package_data={"cplus_core": ["version.json", "data/**"]},
+    include_package_data=True,
     install_requires=[],
     extras_require={
         "dev": [],
