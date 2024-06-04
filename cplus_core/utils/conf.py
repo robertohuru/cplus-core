@@ -13,7 +13,7 @@ import typing
 import uuid
 
 from qgis.PyQt import QtCore
-from qgis.core import QgsRectangle, QgsSettings
+from qgis.core import QgsSettings
 
 from ..definitions.defaults import PRIORITY_LAYERS
 
