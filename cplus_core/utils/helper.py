@@ -27,12 +27,6 @@ from qgis.analysis import QgsAlignRaster
 
 from qgis import processing
 
-from ..definitions.constants import (
-    NCS_CARBON_SEGMENT,
-    NCS_PATHWAY_SEGMENT,
-    PRIORITY_LAYERS_SEGMENT,
-)
-
 
 def tr(message):
     """Get the translation for a string using Qt translation API.
@@ -227,7 +221,7 @@ def align_rasters(
     try:
         snap_directory = os.path.join(output_dir, "snap_layers")
 
-        FileUtils.create_new_dir(snap_directory)
+        BaseFileUtils.create_new_dir(snap_directory)
 
         input_path = Path(input_raster_source)
 
@@ -235,7 +229,7 @@ def align_rasters(
             f"{snap_directory}", f"{input_path.stem}_{str(uuid.uuid4())[:4]}.tif"
         )
 
-        FileUtils.create_new_file(input_layer_output)
+        BaseFileUtils.create_new_file(input_layer_output)
 
         align = QgsAlignRaster()
         lst = [
@@ -292,49 +286,10 @@ def align_rasters(
     return input_layer_output, None
 
 
-class FileUtils:
+class BaseFileUtils:
     """
     Provides functionality for commonly used file-related operations.
     """
-
-    @staticmethod
-    def create_ncs_pathways_dir(base_dir: str):
-        """Creates an NCS subdirectory under BASE_DIR. Skips
-        creation of the subdirectory if it already exists.
-        """
-        if not Path(base_dir).is_dir():
-            return
-
-        ncs_pathway_dir = f"{base_dir}/{NCS_PATHWAY_SEGMENT}"
-        message = tr(
-            "Missing parent directory when creating NCS pathways subdirectory."
-        )
-        FileUtils.create_new_dir(ncs_pathway_dir, message)
-
-    @staticmethod
-    def create_ncs_carbon_dir(base_dir: str):
-        """Creates an NCS subdirectory for carbon layers under BASE_DIR.
-        Skips creation of the subdirectory if it already exists.
-        """
-        if not Path(base_dir).is_dir():
-            return
-
-        ncs_carbon_dir = f"{base_dir}/{NCS_CARBON_SEGMENT}"
-        message = tr("Missing parent directory when creating NCS carbon subdirectory.")
-        FileUtils.create_new_dir(ncs_carbon_dir, message)
-
-    def create_pwls_dir(base_dir: str):
-        """Creates priority weighting layers subdirectory under BASE_DIR.
-        Skips creation of the subdirectory if it already exists.
-        """
-        if not Path(base_dir).is_dir():
-            return
-
-        pwl_dir = f"{base_dir}/{PRIORITY_LAYERS_SEGMENT}"
-        message = tr(
-            "Missing parent directory when creating priority weighting layers subdirectory."
-        )
-        FileUtils.create_new_dir(pwl_dir, message)
 
     @staticmethod
     def create_new_dir(directory: str, log_message: str = ""):
@@ -394,7 +349,7 @@ def align_rasters(
     try:
         snap_directory = os.path.join(output_dir, "snap_layers")
 
-        FileUtils.create_new_dir(snap_directory)
+        BaseFileUtils.create_new_dir(snap_directory)
 
         input_path = Path(input_raster_source)
 
@@ -402,7 +357,7 @@ def align_rasters(
             f"{snap_directory}", f"{input_path.stem}_{str(uuid.uuid4())[:4]}.tif"
         )
 
-        FileUtils.create_new_file(input_layer_output)
+        BaseFileUtils.create_new_file(input_layer_output)
 
         align = QgsAlignRaster()
         lst = [
@@ -457,3 +412,16 @@ def align_rasters(
     )
 
     return input_layer_output, None
+
+
+def get_layer_type(file_path: str):
+    """
+    Get layer type code from file path
+    """
+    file_name, file_extension = os.path.splitext(file_path)
+    if file_extension.lower() in [".tif", ".tiff"]:
+        return 0
+    elif file_extension.lower() in [".geojson", ".zip", ".shp"]:
+        return 1
+    else:
+        return -1

@@ -30,7 +30,7 @@ from ..definitions.defaults import (
 )
 from ..models.base import ScenarioResult
 from ..models.helpers import clone_activity
-from ..utils.helper import align_rasters, clean_filename, tr, log, FileUtils
+from ..utils.helper import align_rasters, clean_filename, tr, log, BaseFileUtils
 
 
 class ScenarioAnalysisTask(QgsTask):
@@ -121,7 +121,7 @@ class ScenarioAnalysisTask(QgsTask):
 
         self.scenario_directory = self.get_scenario_directory()
 
-        FileUtils.create_new_dir(self.scenario_directory)
+        BaseFileUtils.create_new_dir(self.scenario_directory)
 
         selected_pathway = None
         pathway_found = False
@@ -510,7 +510,7 @@ class ScenarioAnalysisTask(QgsTask):
                     self.scenario_directory, "pathways_carbon_layers"
                 )
 
-                FileUtils.create_new_dir(new_carbon_directory)
+                BaseFileUtils.create_new_dir(new_carbon_directory)
 
                 output_file = os.path.join(
                     new_carbon_directory, f"{file_name}_{str(uuid.uuid4())[:4]}.tif"
@@ -641,7 +641,7 @@ class ScenarioAnalysisTask(QgsTask):
                     self.scenario_directory, "pathways"
                 )
 
-                FileUtils.create_new_dir(snapped_pathways_directory)
+                BaseFileUtils.create_new_dir(snapped_pathways_directory)
 
                 for pathway in pathways:
                     pathway_layer = QgsRasterLayer(pathway.path, pathway.name)
@@ -664,7 +664,7 @@ class ScenarioAnalysisTask(QgsTask):
                             self.scenario_directory, "carbon_layers"
                         )
 
-                        FileUtils.create_new_dir(snapped_carbon_directory)
+                        BaseFileUtils.create_new_dir(snapped_carbon_directory)
 
                         snapped_carbon_paths = []
 
@@ -723,7 +723,7 @@ class ScenarioAnalysisTask(QgsTask):
                         self.scenario_directory, "priority_layers"
                     )
 
-                    FileUtils.create_new_dir(snapped_priority_directory)
+                    BaseFileUtils.create_new_dir(snapped_priority_directory)
 
                     priority_layers = []
                     for priority_layer in activity.priority_layers:
@@ -913,7 +913,7 @@ class ScenarioAnalysisTask(QgsTask):
                 normalized_pathways_directory = os.path.join(
                     self.scenario_directory, "normalized_pathways"
                 )
-                FileUtils.create_new_dir(normalized_pathways_directory)
+                BaseFileUtils.create_new_dir(normalized_pathways_directory)
                 file_name = clean_filename(pathway.name.replace(" ", "_"))
 
                 output_file = os.path.join(
@@ -1031,7 +1031,7 @@ class ScenarioAnalysisTask(QgsTask):
                 activities_directory = os.path.join(
                     self.scenario_directory, "activities"
                 )
-                FileUtils.create_new_dir(activities_directory)
+                BaseFileUtils.create_new_dir(activities_directory)
                 file_name = clean_filename(activity.name.replace(" ", "_"))
 
                 layers = []
@@ -1209,7 +1209,7 @@ class ScenarioAnalysisTask(QgsTask):
                 masked_activities_directory = os.path.join(
                     self.scenario_directory, "masked_activities"
                 )
-                FileUtils.create_new_dir(masked_activities_directory)
+                BaseFileUtils.create_new_dir(masked_activities_directory)
                 file_name = clean_filename(activity.name.replace(" ", "_"))
 
                 output_file = os.path.join(
@@ -1413,7 +1413,7 @@ class ScenarioAnalysisTask(QgsTask):
                 sieved_ims_directory = os.path.join(
                     self.scenario_directory, "sieved_ims"
                 )
-                FileUtils.create_new_dir(sieved_ims_directory)
+                BaseFileUtils.create_new_dir(sieved_ims_directory)
                 file_name = clean_filename(model.name.replace(" ", "_"))
 
                 output_file = os.path.join(
@@ -1527,7 +1527,7 @@ class ScenarioAnalysisTask(QgsTask):
                 normalized_activities_directory = os.path.join(
                     self.scenario_directory, "normalized_activities"
                 )
-                FileUtils.create_new_dir(normalized_activities_directory)
+                BaseFileUtils.create_new_dir(normalized_activities_directory)
                 file_name = clean_filename(activity.name.replace(" ", "_"))
 
                 output_file = os.path.join(
@@ -1739,7 +1739,7 @@ class ScenarioAnalysisTask(QgsTask):
                     self.scenario_directory, "weighted_activities"
                 )
 
-                FileUtils.create_new_dir(weighted_activities_directory)
+                BaseFileUtils.create_new_dir(weighted_activities_directory)
 
                 file_name = clean_filename(activity.name.replace(" ", "_"))
                 output_file = os.path.join(
