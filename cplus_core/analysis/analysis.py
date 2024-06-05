@@ -105,6 +105,7 @@ class ScenarioAnalysisTask(QgsTask):
         return masking_layers
 
     def cancel_task(self, exception=None):
+        self.error = exception
         self.cancel()
 
     def log_message(
@@ -115,6 +116,14 @@ class ScenarioAnalysisTask(QgsTask):
         notify: bool = True,
     ):
         log(message, name=name, info=info, notify=notify)
+
+    def on_terminated(self):
+        """Called when the task is terminated."""
+        message = "Processing has been cancelled by the user."
+        if self.error:
+            message = f"Problem in running scenario analysis: {self.error}"
+        self.set_status_message(tr(message))
+        self.log_message(message)
 
     def run(self):
         """Runs the main scenario analysis task operations"""
@@ -226,14 +235,15 @@ class ScenarioAnalysisTask(QgsTask):
                 extent_string,
             )
 
-        # Run sieve function on the created models if user has enabled it
-
-        sieve_enabled = self.get_settings_value(Settings.SIEVE_ENABLED, default=False)
-
-        if sieve_enabled:
-            self.run_activities_sieve(
-                self.analysis_activities,
-            )
+        # TODO enable the sieve functionality
+        # sieve_enabled = self.get_settings_value(
+        #     Settings.SIEVE_ENABLED, default=False, setting_type=bool
+        # )
+        #
+        # if sieve_enabled:
+        #     self.run_activities_sieve(
+        #         self.analysis_activities,
+        #     )
 
         # After creating activities, we normalize them using the same coefficients
         # used in normalizing their respective pathways.
@@ -576,8 +586,7 @@ class ScenarioAnalysisTask(QgsTask):
                 pathway.path = results["OUTPUT"]
         except Exception as e:
             self.log_message(f"Problem running pathway analysis,  {e}")
-            self.error = e
-            self.cancel_task()
+            self.cancel_task(e)
 
         return True
 
@@ -768,8 +777,7 @@ class ScenarioAnalysisTask(QgsTask):
 
         except Exception as e:
             self.log_message(f"Problem snapping layers, {e} \n")
-            self.error = e
-            self.cancel_task()
+            self.cancel_task(e)
             return False
 
         return True
@@ -996,8 +1004,7 @@ class ScenarioAnalysisTask(QgsTask):
 
         except Exception as e:
             self.log_message(f"Problem normalizing pathways layers, {e} \n")
-            self.error = e
-            self.cancel_task()
+            self.cancel_task(e)
             return False
 
         return True
@@ -1104,8 +1111,7 @@ class ScenarioAnalysisTask(QgsTask):
 
         except Exception as e:
             self.log_message(f"Problem creating activity layers, {e}")
-            self.error = e
-            self.cancel_task()
+            self.cancel_task(e)
             return False
 
         return True
@@ -1255,8 +1261,7 @@ class ScenarioAnalysisTask(QgsTask):
 
         except Exception as e:
             self.log_message(f"Problem masking activities layers, {e} \n")
-            self.error = e
-            self.cancel_task()
+            self.cancel_task(e)
             return False
 
         return True
@@ -1461,8 +1466,7 @@ class ScenarioAnalysisTask(QgsTask):
 
         except Exception as e:
             self.log_message(f"Problem running sieve function on models layers, {e} \n")
-            self.error = e
-            self.cancel_task()
+            self.cancel_task(e)
             return False
 
         return True
@@ -1611,8 +1615,7 @@ class ScenarioAnalysisTask(QgsTask):
 
         except Exception as e:
             self.log_message(f"Problem normalizing activity layers, {e} \n")
-            self.error = e
-            self.cancel_task()
+            self.cancel_task(e)
             return False
 
         return True
@@ -1785,8 +1788,7 @@ class ScenarioAnalysisTask(QgsTask):
 
         except Exception as e:
             self.log_message(f"Problem weighting activities, {e}\n")
-            self.error = e
-            self.cancel_task()
+            self.cancel_task(e)
             return None, False
 
         return weighted_activities, True
@@ -1880,8 +1882,7 @@ class ScenarioAnalysisTask(QgsTask):
 
         except Exception as e:
             self.log_message(f"Problem cleaning activities, {e}")
-            self.error = e
-            self.cancel_task()
+            self.cancel_task(e)
             return False
 
         return True
@@ -2008,8 +2009,7 @@ class ScenarioAnalysisTask(QgsTask):
                     'scenario analysis, error message "{}"'.format(str(err))
                 )
             )
-            self.error = err
-            self.cancel_task()
+            self.cancel_task(err)
             return False
 
         return True
