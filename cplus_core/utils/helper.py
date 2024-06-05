@@ -5,10 +5,13 @@
 
 
 import os
+import json
 import uuid
+import datetime
 from pathlib import Path
+from uuid import UUID
 
-from qgis.PyQt import QtCore, QtGui
+from qgis.PyQt import QtCore
 from qgis.core import (
     Qgis,
     QgsCoordinateReferenceSystem,
@@ -20,24 +23,12 @@ from qgis.core import (
     QgsProject,
     QgsProcessing,
     QgsRasterLayer,
-    QgsRectangle,
     QgsUnitTypes,
 )
 
 from qgis.analysis import QgsAlignRaster
 
 from qgis import processing
-
-from ..definitions.defaults import (
-    DOCUMENTATION_SITE,
-    REPORT_FONT_NAME,
-    TEMPLATE_NAME,
-)
-from ..definitions.constants import (
-    NCS_CARBON_SEGMENT,
-    NCS_PATHWAY_SEGMENT,
-    PRIORITY_LAYERS_SEGMENT,
-)
 
 
 def tr(message):
@@ -84,58 +75,6 @@ def log(
         level=level,
         notifyUser=notify,
     )
-
-
-def open_documentation(url=None):
-    """Opens documentation website in the default browser
-
-    :param url: URL link to documentation site (e.g. gh pages site)
-    :type url: str
-
-    """
-    url = DOCUMENTATION_SITE if url is None else url
-    result = QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
-    return result
-
-
-def get_plugin_version() -> [str, None]:
-    """Returns the current plugin version
-    as saved in the metadata.txt plugin file.
-
-    :returns version: Plugin version
-    :rtype version: str
-    """
-    metadata_file = Path(__file__).parent.resolve() / "metadata.txt"
-
-    with open(metadata_file, "r") as f:
-        for line in f.readlines():
-            if line.startswith("version"):
-                version = line.strip().split("=")[1]
-                return version
-    return None
-
-
-def get_report_font(size=11.0, bold=False, italic=False) -> QtGui.QFont:
-    """Uses the default font family name to create a
-    font for use in the report.
-
-    :param size: The font point size, default is 11.
-    :type size: float
-
-    :param bold: True for bold font else False which is the default.
-    :type bold: bool
-
-    :param italic: True for font to be in italics else False which is the default.
-    :type italic: bool
-
-    :returns: Font to use in a report.
-    :rtype: QtGui.QFont
-    """
-    font_weight = 50
-    if bold is True:
-        font_weight = 75
-
-    return QtGui.QFont(REPORT_FONT_NAME, int(size), font_weight, italic)
 
 
 def clean_filename(filename):
@@ -285,7 +224,7 @@ def align_rasters(
     try:
         snap_directory = os.path.join(output_dir, "snap_layers")
 
-        FileUtils.create_new_dir(snap_directory)
+        BaseFileUtils.create_new_dir(snap_directory)
 
         input_path = Path(input_raster_source)
 
@@ -293,7 +232,7 @@ def align_rasters(
             f"{snap_directory}", f"{input_path.stem}_{str(uuid.uuid4())[:4]}.tif"
         )
 
-        FileUtils.create_new_file(input_layer_output)
+        BaseFileUtils.create_new_file(input_layer_output)
 
         align = QgsAlignRaster()
         lst = [
@@ -350,95 +289,10 @@ def align_rasters(
     return input_layer_output, None
 
 
-class FileUtils:
+class BaseFileUtils:
     """
     Provides functionality for commonly used file-related operations.
     """
-
-    @staticmethod
-    def plugin_dir() -> str:
-        """Returns the root directory of the plugin.
-
-        :returns: Root directory of the plugin.
-        :rtype: str
-        """
-        return os.path.join(os.path.dirname(os.path.realpath(__file__)))
-
-    @staticmethod
-    def get_icon(file_name: str) -> QtGui.QIcon:
-        """Creates an icon based on the icon name in the 'icons' folder.
-
-        :param file_name: File name which should include the extension.
-        :type file_name: str
-
-        :returns: Icon object matching the file name.
-        :rtype: QtGui.QIcon
-        """
-        icon_path = os.path.normpath(f"{FileUtils.plugin_dir()}/icons/{file_name}")
-
-        if not os.path.exists(icon_path):
-            return QtGui.QIcon()
-
-        return QtGui.QIcon(icon_path)
-
-    @staticmethod
-    def report_template_path(file_name=None) -> str:
-        """Get the absolute path to the template file with the given name.
-        Caller needs to verify that the file actually exists.
-
-        :param file_name: Template file name including the extension. If
-        none is specified then it will use `main.qpt` as the default
-        template name.
-        :type file_name: str
-
-        :returns: The absolute path to the template file with the given name.
-        :rtype: str
-        """
-        if file_name is None:
-            file_name = TEMPLATE_NAME
-
-        absolute_path = f"{FileUtils.plugin_dir()}/data/reports/{file_name}"
-
-        return os.path.normpath(absolute_path)
-
-    @staticmethod
-    def create_ncs_pathways_dir(base_dir: str):
-        """Creates an NCS subdirectory under BASE_DIR. Skips
-        creation of the subdirectory if it already exists.
-        """
-        if not Path(base_dir).is_dir():
-            return
-
-        ncs_pathway_dir = f"{base_dir}/{NCS_PATHWAY_SEGMENT}"
-        message = tr(
-            "Missing parent directory when creating NCS pathways subdirectory."
-        )
-        FileUtils.create_new_dir(ncs_pathway_dir, message)
-
-    @staticmethod
-    def create_ncs_carbon_dir(base_dir: str):
-        """Creates an NCS subdirectory for carbon layers under BASE_DIR.
-        Skips creation of the subdirectory if it already exists.
-        """
-        if not Path(base_dir).is_dir():
-            return
-
-        ncs_carbon_dir = f"{base_dir}/{NCS_CARBON_SEGMENT}"
-        message = tr("Missing parent directory when creating NCS carbon subdirectory.")
-        FileUtils.create_new_dir(ncs_carbon_dir, message)
-
-    def create_pwls_dir(base_dir: str):
-        """Creates priority weighting layers subdirectory under BASE_DIR.
-        Skips creation of the subdirectory if it already exists.
-        """
-        if not Path(base_dir).is_dir():
-            return
-
-        pwl_dir = f"{base_dir}/{PRIORITY_LAYERS_SEGMENT}"
-        message = tr(
-            "Missing parent directory when creating priority weighting layers subdirectory."
-        )
-        FileUtils.create_new_dir(pwl_dir, message)
 
     @staticmethod
     def create_new_dir(directory: str, log_message: str = ""):
@@ -498,7 +352,7 @@ def align_rasters(
     try:
         snap_directory = os.path.join(output_dir, "snap_layers")
 
-        FileUtils.create_new_dir(snap_directory)
+        BaseFileUtils.create_new_dir(snap_directory)
 
         input_path = Path(input_raster_source)
 
@@ -506,7 +360,7 @@ def align_rasters(
             f"{snap_directory}", f"{input_path.stem}_{str(uuid.uuid4())[:4]}.tif"
         )
 
-        FileUtils.create_new_file(input_layer_output)
+        BaseFileUtils.create_new_file(input_layer_output)
 
         align = QgsAlignRaster()
         lst = [
@@ -561,3 +415,60 @@ def align_rasters(
     )
 
     return input_layer_output, None
+
+
+def get_layer_type(file_path: str):
+    """
+    Get layer type code from file path
+    """
+    file_name, file_extension = os.path.splitext(file_path)
+    if file_extension.lower() in [".tif", ".tiff"]:
+        return 0
+    elif file_extension.lower() in [".geojson", ".zip", ".shp"]:
+        return 1
+    else:
+        return -1
+
+
+class CustomJsonEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder which handles UUID and datetime
+    """
+
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            # if the obj is uuid, we simply return the value of uuid
+            return obj.hex
+        if isinstance(obj, datetime.datetime):
+            # if the obj is uuid, we simply return the value of uuid
+            return obj.isoformat()
+        return json.JSONEncoder.default(self, obj)
+
+
+def todict(obj, classkey=None):
+    """
+    Convert any object to dictionary
+    """
+
+    if isinstance(obj, dict):
+        data = {}
+        for k, v in obj.items():
+            data[k] = todict(v, classkey)
+        return data
+    elif hasattr(obj, "_ast"):
+        return todict(obj._ast())
+    elif hasattr(obj, "__iter__") and not isinstance(obj, str):
+        return [todict(v, classkey) for v in obj]
+    elif hasattr(obj, "__dict__"):
+        data = dict(
+            [
+                (key, todict(value, classkey))
+                for key, value in obj.__dict__.items()
+                if not callable(value) and not key.startswith("_")
+            ]
+        )
+        if classkey is not None and hasattr(obj, "__class__"):
+            data[classkey] = obj.__class__.__name__
+        return data
+    else:
+        return obj

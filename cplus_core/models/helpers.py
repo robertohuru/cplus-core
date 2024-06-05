@@ -2,7 +2,7 @@
 
 """Helper functions for supporting model management."""
 
-from dataclasses import field, fields
+from dataclasses import fields
 import typing
 import uuid
 
