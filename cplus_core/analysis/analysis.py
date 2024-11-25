@@ -1476,7 +1476,7 @@ class ScenarioAnalysisTask(QgsTask):
                 masked_activities_directory = os.path.join(
                     self.scenario_directory, "final_masked_activities"
                 )
-                FileUtils.create_new_dir(masked_activities_directory)
+                BaseFileUtils.create_new_dir(masked_activities_directory)
                 file_name = clean_filename(activity.name.replace(" ", "_"))
 
                 output_file = os.path.join(
