@@ -1358,13 +1358,17 @@ class ScenarioAnalysisTask(QgsTask):
         self, activities, extent, temporary_output=False
     ):
         """Applies the mask layers into the passed activities
+
         :param activities: List of the selected activities
         :type activities: typing.List[Activity]
+
         :param extent: selected extent from user
         :type extent: str
+
         :param temporary_output: Whether to save the processing outputs as temporary
         files
         :type temporary_output: bool
+
         :returns: Whether the task operations was successful
         :rtype: bool
         """
@@ -1381,7 +1385,11 @@ class ScenarioAnalysisTask(QgsTask):
                 masking_layers = activity.mask_paths
 
                 if len(masking_layers) < 1:
-                    return False
+                    self.log_message(
+                        f"Skipping activity masking "
+                        f"No mask layer(s) for activity {activity.name}"
+                    )
+                    continue
                 if len(masking_layers) > 1:
                     initial_mask_layer = self.merge_vector_layers(masking_layers)
                 else:
@@ -1390,10 +1398,10 @@ class ScenarioAnalysisTask(QgsTask):
 
                 if not initial_mask_layer.isValid():
                     self.log_message(
-                        f"Skipping activities masking "
+                        f"Skipping activity masking "
                         f"using layer {mask_layer_path}, not a valid layer."
                     )
-                    return False
+                    continue
 
                 # see https://qgis.org/pyqgis/master/core/Qgis.html#qgis.core.Qgis.GeometryType
                 if Qgis.versionInt() < 33000:
@@ -1407,12 +1415,27 @@ class ScenarioAnalysisTask(QgsTask):
 
                 if not layer_check:
                     self.log_message(
-                        f"Skipping activities masking "
+                        f"Skipping activity masking "
                         f"using layer {mask_layer_path}, not a polygon layer."
                     )
-                    return False
+                    continue
 
                 extent_layer = self.layer_extent(extent)
+
+                if extent_layer.crs() != initial_mask_layer.crs():
+                    self.log_message(
+                        "Skipping masking, the mask layers crs"
+                        " do not match the scenario crs."
+                    )
+                    continue
+
+                if not extent_layer.extent().intersects(initial_mask_layer.extent()):
+                    self.log_message(
+                        "Skipping masking, the mask layers extent"
+                        " and the scenario extent do not overlap."
+                    )
+                    continue
+
                 mask_layer = self.mask_layer_difference(
                     initial_mask_layer, extent_layer
                 )
@@ -1422,22 +1445,22 @@ class ScenarioAnalysisTask(QgsTask):
 
                 if not mask_layer.isValid():
                     self.log_message(
-                        f"Skipping activities masking "
+                        f"Skipping activity masking "
                         f"the created difference mask layer {mask_layer.source()},"
-                        f" not a valid layer."
+                        f"is not a valid layer."
                     )
-                    return False
+                    continue
                 if activity.path is None or activity.path == "":
                     if not self.processing_cancelled:
                         self.set_info_message(
                             tr(
-                                f"Problem when masking activities, "
+                                f"Problem when masking activity, "
                                 f"there is no map layer for the activity {activity.name}"
                             ),
                             level=Qgis.Critical,
                         )
                         self.log_message(
-                            f"Problem when masking activities, "
+                            f"Problem when masking activity, "
                             f"there is no map layer for the activity {activity.name}"
                         )
                     else:
@@ -1448,12 +1471,12 @@ class ScenarioAnalysisTask(QgsTask):
                         )
                         self.log_message(f"Processing has been cancelled by the user.")
 
-                    return False
+                    continue
 
                 masked_activities_directory = os.path.join(
                     self.scenario_directory, "final_masked_activities"
                 )
-                BaseFileUtils.create_new_dir(masked_activities_directory)
+                FileUtils.create_new_dir(masked_activities_directory)
                 file_name = clean_filename(activity.name.replace(" ", "_"))
 
                 output_file = os.path.join(
@@ -1467,6 +1490,20 @@ class ScenarioAnalysisTask(QgsTask):
 
                 activity_layer = QgsRasterLayer(activity.path, "activity_layer")
 
+                if activity_layer.crs() != mask_layer.crs():
+                    self.log_message(
+                        f"Skipping masking, activity layer and"
+                        f" mask layer(s) have different CRS"
+                    )
+                    continue
+
+                if not activity_layer.extent().intersects(mask_layer.extent()):
+                    self.log_message(
+                        "Skipping masking, the extents of the activity layer "
+                        "and mask layers do not overlap."
+                    )
+                    continue
+
                 # Actual processing calculation
                 alg_params = {
                     "INPUT": activity.path,
@@ -1479,7 +1516,7 @@ class ScenarioAnalysisTask(QgsTask):
                 }
 
                 self.log_message(
-                    f"Used parameters for masking the activities: {alg_params} \n"
+                    f"Used parameters for masking the activity {activity.name}: {alg_params} \n"
                 )
 
                 feedback = QgsProcessingFeedback()
