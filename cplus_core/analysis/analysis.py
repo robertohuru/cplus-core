@@ -244,19 +244,12 @@ class ScenarioAnalysisTask(QgsTask):
                 extent_string,
             )
 
-        # Preparing all the pathways by adding them together with
-        # their carbon layers before creating
-        # their respective activities.
+        # Weight the pathways using the pathway suitability index
+        # and priority group coefficients for the PWLs
 
         save_output = self.get_settings_value(
-            Settings.NCS_WITH_CARBON, default=True, setting_type=bool
+            Settings.NCS_WEIGHTED, default=True, setting_type=bool
         )
-
-        # self.run_pathways_analysis(
-        #     self.analysis_activities,
-        #     extent_string,
-        #     temporary_output=not save_output,
-        # )
 
         self.run_pathways_weighting(
             self.analysis_activities,
@@ -265,16 +258,7 @@ class ScenarioAnalysisTask(QgsTask):
             temporary_output=not save_output,
         )
 
-        # Normalizing all the activities pathways using the carbon coefficient and
-        # the pathway suitability index
-
-        self.run_pathways_normalization(
-            self.analysis_activities,
-            extent_string,
-        )
-
         # Creating activities from the normalized pathways
-
         save_output = self.get_settings_value(
             Settings.LANDUSE_PROJECT, default=True, setting_type=bool
         )
@@ -310,36 +294,23 @@ class ScenarioAnalysisTask(QgsTask):
                 self.analysis_activities,
             )
 
-        # After creating activities, we normalize them using the same coefficients
-        # used in normalizing their respective pathways.
-
+        # After creating activities, we normalize them using the
+        # suitability index
         save_output = self.get_settings_value(
             Settings.LANDUSE_NORMALIZED, default=True, setting_type=bool
         )
 
-        self.run_activities_normalization(
-            self.analysis_activities,
-            extent_string,
-            temporary_output=not save_output,
-        )
-
-        # Weighting the activities with their corresponding priority weighting layers
-        save_output = self.get_settings_value(
-            Settings.LANDUSE_WEIGHTED, default=True, setting_type=bool
-        )
-        weighted_activities, result = self.run_activities_weighting(
-            self.analysis_activities,
-            self.analysis_priority_layers_groups,
-            extent_string,
-            temporary_output=not save_output,
-        )
-
-        self.analysis_weighted_activities = weighted_activities
-        self.scenario.weighted_activities = weighted_activities
+        # self.run_activities_normalization(
+        #     self.analysis_activities,
+        #     extent_string,
+        #     temporary_output=not save_output,
+        # )
 
         # Post weighting analysis
         self.run_activities_cleaning(
-            weighted_activities, extent_string, temporary_output=not save_output
+            self.analysis_activities,
+            extent_string,
+            temporary_output=not save_output
         )
 
         # The highest position tool analysis
