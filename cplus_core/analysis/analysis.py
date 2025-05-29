@@ -626,7 +626,7 @@ class ScenarioAnalysisTask(QgsTask):
                         f"doesn't exist, skipping the layer "
                         f"from the pathway {pathway.name} weighting."
                     )
-                    if pwl is None:
+                    if pwl is None or pwl == "":
                         self.log_message(missing_pwl_message)
                         continue
 
